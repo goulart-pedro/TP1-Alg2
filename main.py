@@ -48,6 +48,9 @@ def has_common_prefix(w1: str, w2: str):
 
 
 def trie_insert(root: trie_node, word: str, filename: str):
+    if root.branches.get(word):
+        return root
+    
     for key, node in root.branches.items():
         if word.startswith(key):
             restof_word = word[len(key):]
@@ -68,7 +71,7 @@ def trie_insert(root: trie_node, word: str, filename: str):
                 return trie_insert(
                     root.branches[common_prefix], restof_word, filename
                 )
-        
+    
     root.branches[word] = trie_node([filename], {})
     return root
 
@@ -81,6 +84,25 @@ def print_trie(node: trie_node, prefix=""):
         print(f"{prefix}[{key}]")
         print_trie(child, prefix + "  ")
 
+
+# teste com um arquivo:
+with open('./bbc/tech/001.txt') as f:
+    ft = trie()
+    print('⌛indexando...')
+    
+    for word in f.read().split():
+        trie_insert(ft, word, './bbc/tech/001.txt')
+
+    print('✅ indexação completa')
+    # print_trie(ft)
+        
+
+# Teste para inserção de repetições
+t = trie()
+trie_insert(t, 'the', 't0')
+trie_insert(t, 'the', 't0')
+
+assert t == trie_node([], {'the': trie_node(['t0'], {})})
 
 
 # Casos de teste adaptados para divisão de nós
