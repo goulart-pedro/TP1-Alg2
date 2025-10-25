@@ -62,8 +62,9 @@ def trie_insert(root: trie_node, word: str, filename: str):
                 # se ele está sendo criado é pq nao achei
                 # palavra igual antes
                 root.branches[common_prefix] = trie_node(
-                    [], {restof_key: node
-                })
+                    [], {restof_key: node}
+                )
+                
                 return trie_insert(
                     root.branches[common_prefix], restof_word, filename
                 )
@@ -82,13 +83,14 @@ def print_trie(node: trie_node, prefix=""):
 
 
 
-# TODO: adaptar testes para o caso onde o node é dividido
+# Casos de teste adaptados para divisão de nós
 t = trie()
 trie_insert(t, 'peter', 't1')
 assert t == trie_node(
     index=[],
     branches={'peter': trie_node(index=['t1'], branches={})}
 )
+
 trie_insert(t, 'dampf', 't2')
 assert t == trie_node(
     index=[],
@@ -97,17 +99,102 @@ assert t == trie_node(
         'dampf': trie_node(index=['t2'], branches={})
     }
 )
+
 trie_insert(t, 'donau', 't3')
-trie_insert(t, 'donaudampfschiff', 't3')
-trie_insert(t, 'donaudampfschiffahrt', 't3')
 assert t == trie_node(
     index=[],
     branches={
         'peter': trie_node(['t1'], {}),
-        'dampf': trie_node(['t2'], {}),
-        'donau': trie_node(['t3'], {
-                    'dampfschiff': trie_node(['t3'], {
-                        'ahrt': trie_node(['t3'], {})
-                        })
+        'd': trie_node([], {
+            'ampf': trie_node(['t2'], {}),
+            'onau': trie_node(['t3'], {})
+        })
+    }
+)
+
+trie_insert(t, 'donaudampfschiff', 't3')
+# Após esta inserção, 'd' -> 'onau' deve ser dividido
+assert t == trie_node(
+    index=[],
+    branches={
+        'peter': trie_node(['t1'], {}),
+        'd': trie_node([], {
+            'ampf': trie_node(['t2'], {}),
+            'onau': trie_node(['t3'], {
+                'dampfschiff': trie_node(['t3'], {})
             })
         })
+    }
+)
+
+trie_insert(t, 'donaudampfschiffahrt', 't3')
+# Após esta inserção, 'dampfschiff' deve ser dividido
+assert t == trie_node(
+    index=[],
+    branches={
+        'peter': trie_node(['t1'], {}),
+        'd': trie_node([], {
+            'ampf': trie_node(['t2'], {}),
+            'onau': trie_node(['t3'], {
+                'dampfschiff': trie_node(['t3'], {
+                    'ahrt': trie_node(['t3'], {})
+                })
+            })
+        })
+    }
+)
+
+# Casos de teste adicionais para divisões mais complexas
+t2 = trie()
+trie_insert(t2, 'abc', 'v1')
+trie_insert(t2, 'abd', 'v2')
+# Deve dividir 'ab' e ter 'c' e 'd' como ramos
+assert t2 == trie_node(
+    index=[],
+    branches={
+        'ab': trie_node(
+            index=[],
+            branches={
+                'c': trie_node(['v1'], {}),
+                'd': trie_node(['v2'], {})
+            }
+        )
+    }
+)
+
+# Caso de teste onde temos múltiplos níveis de divisão
+t3 = trie()
+trie_insert(t3, 'casa', 'v1')
+trie_insert(t3, 'casaco', 'v2')
+trie_insert(t3, 'casamento', 'v3')
+# Deve dividir 'casa' e ter múltiplos ramos
+assert t3 == trie_node(
+    index=[],
+    branches={
+        'casa': trie_node(
+            index=['v1'],
+            branches={
+                'co': trie_node(['v2'], {}),
+                'mento': trie_node(['v3'], {})
+            }
+        )
+    }
+)
+
+# Caso de teste com divisão no primeiro caractere
+t4 = trie()
+trie_insert(t4, 'foo', 'v1')
+trie_insert(t4, 'bar', 'v2')
+trie_insert(t4, 'baz', 'v3')
+assert t4 == trie_node(
+    index=[],
+    branches={
+        'foo': trie_node(['v1'], {}),
+        'ba': trie_node([], {
+            'r': trie_node(['v2'], {}),
+            'z': trie_node(['v3'], {})
+        })
+    }
+)
+
+print("Todos os testes passaram!")
