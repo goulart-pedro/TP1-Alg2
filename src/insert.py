@@ -3,12 +3,12 @@ from dataclasses import dataclass, field
         
 @dataclass
 class trie_node:
-    index: set[str] = field(default_factory=set)
+    postings: dict[str, int] = field(default_factory=dict)
     branches: dict[str, 'trie_node'] = field(default_factory=dict)
 
 # retorna um nó vazio
 def trie():
-    return trie_node(set(), dict())
+    return trie_node(dict(), dict())
 
 
 def compute_common_prefix(w1:str, w2:str):
@@ -28,7 +28,7 @@ def has_common_prefix(w1: str, w2: str):
 def trie_insert(root: trie_node, word: str, filename: str):
     if root.branches.get(word):
         # Adiciona o arquivo ao conjunto (set evita duplicatas automaticamente)
-        root.branches[word].index.add(filename)
+        root.branches[word].postings.add(filename)
         return root
     
     for key, node in root.branches.items():
@@ -43,14 +43,14 @@ def trie_insert(root: trie_node, word: str, filename: str):
                 root.branches.pop(key)
                 # o prefixo nao possui indice a principio
                 root.branches[common_prefix] = trie_node(
-                    set(), {restof_key: node}
+                    dict(), {restof_key: node}
                 )
                 
                 return trie_insert(
                     root.branches[common_prefix], restof_word, filename
                 )
     
-    root.branches[word] = trie_node({filename}, {})
+    root.branches[word] = trie_node({filename: 1}, {})
     return root
 
 

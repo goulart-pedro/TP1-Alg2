@@ -49,9 +49,9 @@ def search_tokenizer(search_str: str):
     return tokens
 
 
-def trie_search(t: trie_node, word: str) -> set[str]:
+def trie_search(t: trie_node, word: str) -> dict[str]:
     if not word:
-        return t.index
+        return t.postings
     
     for key, node in t.branches.items():
         common_prefix = compute_common_prefix(word, key)
@@ -61,7 +61,7 @@ def trie_search(t: trie_node, word: str) -> set[str]:
             return trie_search(node, word)
 
     # a palavra existe mas não há prefixo comum
-    return set()
+    return {}
 
 
 def corpus_search(t: trie_node, tokens: list[tuple[str, str]]):
@@ -80,7 +80,8 @@ def corpus_search(t: trie_node, tokens: list[tuple[str, str]]):
 
     for ttype, tvalue in tokens:
         if ttype == 'keyword':
-            set_stack.append(trie_search(t, tvalue))
+            postings_dict = trie_search(t, tvalue)
+            set_stack.append(set(postings_dict.keys()))
 
         if ttype == 'paren':
             if tvalue == '(':
