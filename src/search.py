@@ -1,7 +1,4 @@
-from insert import trie_node, compute_common_prefixrt import tur
-# "pera AND banana"
-# -> trie_search(pera).index
-#    .intersection(trie_search(banana).index)
+from insert import trie_node, compute_common_prefix
 
 
 def search_tokenizer(search_str: str):
@@ -52,7 +49,6 @@ def search_tokenizer(search_str: str):
     return tokens
 
 
-
 def trie_search(t: trie_node, word: str) -> set[str]:
     if not word:
         return t.index
@@ -64,8 +60,50 @@ def trie_search(t: trie_node, word: str) -> set[str]:
             word = word[len(common_prefix):]
             return trie_search(node, word)
 
-    # a palavra existe mas não há prefixo comumroots
+    # a palavra existe mas não há prefixo comum
     return set()
+
+
+def corpus_search(t: trie_node, tokens: list[tuple[str, str]]):
+    operator_stack = []
+    set_stack: list[set[str]] = []
+
+    def process(operator_stack, set_stack):
+        s1 = set_stack.pop()
+        s2 = set_stack.pop()
+
+        if operator_stack.pop() == 'OR':
+            set_stack.append(s1.union(s2))
+        else:
+            set_stack.append(s1.intersection(s2))
+
+
+    for ttype, tvalue in tokens:
+        if ttype == 'keyword':
+            set_stack.append(trie_search(t, tvalue))
+
+        if ttype == 'paren':
+            if tvalue == '(':
+                operator_stack.append(tvalue)
+            else:
+                while operator_stack[-1] != '(':
+                    process(operator_stack, set_stack)
+                operator_stack.pop()
+                    
+                    
+        if ttype == 'operator':
+            while (operator_stack and
+                   operator_stack[-1] == 'AND' and
+                   tvalue == 'OR'):
+                process(operator_stack, set_stack)
+
+                
+            operator_stack.append(tvalue)
+
+    # roda quando toda a entrada foi consumida
+    while operator_stack:
+        process(operator_stack, set_stack)
+    return set_stack.pop()
 
 
 
@@ -149,5 +187,41 @@ if __name__ == '__main__':
         ('paren', ')')
     ]
 
+    # Testes da busca no corpus
+
+    p = search_tokenizer("dampf AND donau")
+    assert(corpus_search(t, p) == set())
+
+    p = search_tokenizer("dampf OR donau")
+    assert(corpus_search(t, p) == {'t2', 't3'})
+
+
+    p = search_tokenizer("dampf OR donau OR peter")
+    assert(corpus_search(t, p) == {'t1', 't2', 't3'})
+
+    # teste de precedência a direita
+    p = search_tokenizer("dampf OR donau AND peter")
+    assert(corpus_search(t, p) == {'t2'})
+
+    # teste de precedência a esquerda
+    p = search_tokenizer("donaudampfschiff AND donau OR peter")
+    assert(corpus_search(t, p) == {'t3', 't1'})
+
+    p = search_tokenizer("donaudampfschiff AND (donau OR peter)")
+    assert(corpus_search(t, p) == {'t3'})
+
+        # Teste 1: Parênteses aninhados complexos
+    p = search_tokenizer("((dampf OR peter) AND (donau OR donaudampfschiffahrt))")
+    assert(corpus_search(t, p) == set())
+    
+    # Teste 2: Múltiplos níveis de parênteses com diferentes operadores
+    p = search_tokenizer("(dampf AND (donau OR peter)) OR donaudampfschiffahrt")
+    assert(corpus_search(t, p) == {'t3'})  # dampf AND (donau OR peter) = vazio, OR donaudampfschiffahrt = t3
+    
+    # Teste 3: Parênteses mudando completamente a precedência
+    p = search_tokenizer("dampf OR (donau AND peter)")
+    assert(corpus_search(t, p) == {'t2'})  # donau AND peter = vazio, OR dampf = t2
+
+    
     print("✅ Todos os testes passaram")
 
