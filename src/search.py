@@ -1,4 +1,4 @@
-from insert import trie_node, compute_common_prefix
+from src.insert import trie_node, compute_common_prefix
 
 
 def search_tokenizer(search_str: str):

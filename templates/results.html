@@ -6,3 +6,10 @@
 
 <h1>Mostrando resultados para</h1>
 <p>{{query}}</p>
+
+{% for result in results %}
+<div>
+  <h3>{{result}}</h3>
+  <p> snippet</p>
+</div>
+{% endfor %}
