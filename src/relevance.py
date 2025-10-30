@@ -22,7 +22,7 @@ def calculate_corpus_stats(trie: trie_node) -> Dict[str, Dict[str, float]]:
             mean = statistics.mean(frequencies)
             stdev = statistics.stdev(frequencies)
         else:
-            mean = frequencies[0]
+            mean = frequencies[0] if frequencies else 0
             stdev = 0.0 # desvio padrão é 0 se só tem um valor
         
         corpus_stats[word] = {'mean': mean, 'stdev': stdev}
@@ -63,6 +63,9 @@ def rank_by_relevance(
         if z_scores:
             avg_z_score = sum(z_scores) / len(z_scores)
             ranked_results.append((doc_id, avg_z_score))
+        else:
+            #relevancia zero
+            ranked_results.append((doc_id, 0.0))
 
     ranked_results.sort(key=lambda item: item[1], reverse=True)
     

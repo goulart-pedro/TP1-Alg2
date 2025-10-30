@@ -22,11 +22,18 @@ def build_index_from_zip(zip_filepath: str) -> trie_node:
                     with zip_ref.open(filename, 'r') as file:
                         content = file.read().decode('utf-8', errors='ignore')
                         words = preprocess_text(content)
-                        base_filename = os.path.basename(filename)
+    
+                        path_parts = filename.split('/')
+                        if len(path_parts) >= 2:
+                            category = path_parts[-2]  # "business", "sport", etc.
+                            doc_number = path_parts[-1].replace('.txt', '')  # "001"
+                            doc_id = f"{category}_{doc_number}"  # "business_001"
+                        else:
+                            doc_id = filename.replace('.txt', '').replace('/', '_')
                         
                         for word in words:
                             if word: # string vazia
-                                trie_insert(root_node, word, base_filename)
+                                trie_insert(root_node, word, doc_id)
                             
     except FileNotFoundError:
         print(f"ERRO: O arquivo '{zip_filepath}' não foi encontrado.")
