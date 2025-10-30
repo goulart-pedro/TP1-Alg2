@@ -1,43 +1,23 @@
-<!doctype html>
-<h1 class="title">Index</h1>
-<form>
-    <input class="textfield" name="query" type="text">
-    <input class="searchbutton" type="submit" value="enviar">
-</form>
-<style>
-  body > h1 {
-      font-family: "CMU Concrete";
-      font-size: 4em;
-      width: 100%;
-      color: whitesmoke;
-      text-align: center;
+{% extends "base.html" %}
 
+{% block content %}
+<div class="main">
+  {% if corpus_was_indexed%}
+  <form class="search-area">
+    <input name="query" type="text">
+    <input type="submit" value="Pesquisar">
+  </form>
+  {% endif %}
 
-  }
-  
-  body {
-      display: flex;
-      align-items: center;
-      flex-direction: column;
-      background-color: #222222;
-  }
-
-  .textfield, .searchbutton {
-      background: none;
-      border: solid 1px gray;
-      border-radius: 1em;
-      color: whitesmoke;
-      padding: 1em;
-  }
-
-  .textfield {
-      border-radius: 1em 0 0 1em;
-      /* box-shadow: 0 2px 12px 4px #08080870; */
-  }
-
-  .searchbutton {
-      background-color: gray;
-      color: #222222;
-      border-radius: 0 1em 1em 0;
-  }
-</style>
+  {% if not corpus_was_indexed %}
+  <div class="corpus-upload-wrapper">
+    <h1>Tá vazio por aqui...</h1>
+    <form class="corpus-upload" action="">
+      <label for="file"><strong>Escolha um corpus para indexar </strong><span class="box__dragndrop">ou o arraste aqui</span>.</label>
+      <input name="" type="file" value=""/>
+      <input name="" type="submit" value="Indexar"/>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
