@@ -1,12 +1,16 @@
-from dataclasses import dataclass, field
-from flask import Flask, render_template, request
-from src.search import corpus_search, search_tokenizer
-from src.insert import trie_node
-from file_upload import upload_and_extract_direct
-import zipfile
 import os
+from flask import Flask, render_template, request
+from src.indexing import build_index_from_zip
+import zipfile
+from src.snippet import generate_snippet
+from src.relevance import calculate_corpus_stats, rank_by_relevance
+from src.search import corpus_search, search_tokenizer
+from src.insert import trie
+from werkzeug.utils import secure_filename
+
 
 app = Flask(__name__)
+app.config['TRIE_ROOT'] = trie()
 
 @app.route('/upload-direct', methods=['POST'])
 def upload_and_extract_direct():
@@ -19,64 +23,86 @@ def upload_and_extract_direct():
         return 'Nenhum arquivo selecionado', 400
     
     if file:
-        try:
-            # Criar pasta de extração com nome corpus
-            # considerar um nome único caso seja interessante ter vários
-            extract_folder_name = "corpus"
-            extract_path = os.path.join('extractions', extract_folder_name)
-            os.makedirs(extract_path, exist_ok=True)
-            
-            # Extrair diretamente do arquivo em memória
-            with zipfile.ZipFile(file.stream, 'r') as zip_ref:
-                zip_ref.extractall(extract_path)
+        # Criar pasta de extração com nome corpus
+        # considerar um nome único caso seja interessante ter vários
+        extract_folder_name = "corpus"
+        extract_path = os.path.join('extractions/corpus', extract_folder_name)
+        os.makedirs(extract_path, exist_ok=True)
 
-            return render_template('index.html', corpus_was_indexed=True)
+        filepath = extract_path + '/' + secure_filename(file.filename)
+        file.save(filepath)
+        app.config['TRIE_ROOT'] = build_index_from_zip(filepath)
 
-        except:
-            return "Algo deu errado"
+        CORPUS_STATS = calculate_corpus_stats(app.config['TRIE_ROOT'])
+        return render_template('index.html', corpus_was_indexed=True)
 
-@app.route("/")
-def handle_search(methods=['POST', 'GET']):
-    _query: str = request.args.get('query', '')
+        
+print(app.config['TRIE_ROOT'])
+RESULTS_PER_PAGE = 10              
+
+
+
+# este bloco roda UMA VEZ quando o servidor é iniciado
+print("--- INICIANDO SERVIDOR DE BUSCA ---")
+
+# # persistencia do índice
+# if os.path.exists(INDEX_FILE_PATH):
+#     print(f"Passo 1/3: Carregando índice de '{INDEX_FILE_PATH}'...")
+#     TRIE_ROOT = load_index_from_disk(INDEX_FILE_PATH)
+# else:
+#     print(f"Passo 1/3: Construindo índice de '{CORPUS_ZIP_FILE}'...")
+#     TRIE_ROOT = build_index_from_zip(CORPUS_ZIP_FILE)
+#     save_index_to_disk(TRIE_ROOT, INDEX_FILE_PATH)
+
+# print("Passo 2/3: Calculando estatísticas do corpus para z-score...")
+CORPUS_STATS = {}
+
+
+# print("Passo 3/3: Carregando conteúdo dos documentos para snippets...")
+# ALL_DOCUMENTS = load_documents_into_memory(CORPUS_ZIP_FILE)
+
+# print("--- SERVIDOR PRONTO ---")
+
+
+@app.route("/", methods=['GET']) 
+def handle_search():
+    query = request.args.get('query', '')
+    page = request.args.get('page', 1, type=int)
+
+    if not query:
+        return render_template('index.html')
     
-    ttrie = trie_node()
+    # tokeniza a query e executa a busca booleana    
+    tokens = search_tokenizer(query)
+    matching_docs = corpus_search(app.config['TRIE_ROOT'], tokens)
     
-    if _query == '':
-        return render_template(
-            'index.html',
-            corpus_was_indexed = len(ttrie.branches)!= 0
-        )
-    else:
-        _page_num = request.args.get('page', 1, type=int)
-        current_page = request.args.get('page', 1, type=int)
-        
+    # extrai as palavras chave e ordena os documentos por relevancia
+    query_keywords = [tvalue for ttype, tvalue in tokens if ttype == 'keyword']
+    ranked_docs = rank_by_relevance(matching_docs, query_keywords, app.config['TRIE_ROOT'], CORPUS_STATS)
 
-        ttrie = trie_node(set(), {
-            'h': trie_node(set(), {
-                'onolulu': trie_node({'Havaí'}, {}),
-                'amburgo': trie_node({'Alemanha'}, {})
-            }),
-            'mo': trie_node(set(), {
-                'coca': trie_node({'Brasil'}, {}),
-                'n': trie_node(set(), {
-                    'aco': trie_node({'Monaco'}, {}),    
-                    'tevideu': trie_node({'Uruguai'}, {})
-                })
-            }),
-            'adelaide': trie_node({'Austrália'}, {}),
-            'cairo': trie_node({'Egito'}, {})
-        })
-        
-        
-        search_tokens = search_tokenizer(_query)
-        _results = list(corpus_search(ttrie, search_tokens))
-        total_pages = (len(_results) + 10 - 1) // 10
+    # paginaçao
+    start_index = (page - 1) * RESULTS_PER_PAGE
+    end_index = start_index + RESULTS_PER_PAGE
+    paginated_docs = ranked_docs[start_index:end_index]
 
-        return render_template(
-            'results.html',
-            length=len(_results),
-            query=_query,
-            results=_results[(_page_num -1) * 10: _page_num * 10 - 1],
-            total_pages=total_pages,
-            current_page=current_page
-        )
+    # snippets
+    final_results = []
+    primary_term = query_keywords[0] if query_keywords else "" # destaque
+    for doc_name in paginated_docs:
+        full_content = ALL_DOCUMENTS.get(doc_name, "")
+        snippet = generate_snippet(full_content, primary_term)
+        final_results.append({'filename': doc_name, 'snippet': snippet})
+
+    total_pages = (len(ranked_docs) + RESULTS_PER_PAGE - 1) // RESULTS_PER_PAGE
+
+    return render_template(
+        'results.html', 
+        query=query, 
+        results=final_results,
+        current_page=page,
+        total_pages=total_pages,
+        total_results=len(ranked_docs)
+    )
+
+if __name__ == '__main__':
+    app.run(debug=True)

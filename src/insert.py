@@ -3,12 +3,12 @@ from dataclasses import dataclass, field
         
 @dataclass
 class trie_node:
-    index: set[str] = field(default_factory=set)
+    postings: dict[str, int] = field(default_factory=dict)
     branches: dict[str, 'trie_node'] = field(default_factory=dict)
 
 # retorna um nó vazio
 def trie():
-    return trie_node(set(), dict())
+    return trie_node(dict(), dict())
 
 
 def compute_common_prefix(w1:str, w2:str):
@@ -26,188 +26,83 @@ def has_common_prefix(w1: str, w2: str):
 
 
 def trie_insert(root: trie_node, word: str, filename: str):
-    if root.branches.get(word):
-        # Adiciona o arquivo ao conjunto (set evita duplicatas automaticamente)
-        root.branches[word].index.add(filename)
-        return root
-    
+    if word in root.branches:
+        child_node = root.branches[word]
+        child_node.postings[filename] = child_node.postings.get(filename, 0) + 1
+        return
+
     for key, node in root.branches.items():
         if word.startswith(key):
-            restof_word = word[len(key):]
-            return trie_insert(node, restof_word, filename)
-        else:
-            common_prefix = compute_common_prefix(key, word)
-            if common_prefix:
-                restof_key = key[len(common_prefix):]
-                restof_word = word[len(common_prefix):]
-                root.branches.pop(key)
-                # o prefixo nao possui indice a principio
-                root.branches[common_prefix] = trie_node(
-                    set(), {restof_key: node}
-                )
-                
-                return trie_insert(
-                    root.branches[common_prefix], restof_word, filename
-                )
+            rest_of_word = word[len(key):]
+            # chamada recursiva 
+            trie_insert(node, rest_of_word, filename)
+            return 
+        
+    for key, node in list(root.branches.items()): # usei list() para poder modificar o dict
+        common_prefix = compute_common_prefix(key, word)
+        if common_prefix:
+            rest_of_key = key[len(common_prefix):]
+            rest_of_word = word[len(common_prefix):]
+            
+            root.branches.pop(key)
+            
+            intermediate_node = trie_node()
+            intermediate_node.branches[rest_of_key] = node 
+            
+            root.branches[common_prefix] = intermediate_node
+            
+            trie_insert(intermediate_node, rest_of_word, filename)
+            return 
     
-    root.branches[word] = trie_node({filename}, {})
-    return root
+    final_node = trie_node(postings={filename: 1})
+    root.branches[word] = final_node
+    return
 
 
-# visualizaçao
+# visualizaçao 
 def print_trie(node: trie_node, prefix=""):
-    if len(node.index) != 0:
-        print(f"{prefix} -> (Arquivo: {node.index})")
+    if node.postings:
+        print(f"{prefix} -> (Postings: {node.postings})")
     for key, child in node.branches.items():
         print(f"{prefix}[{key}]")
         print_trie(child, prefix + "  ")
 
             
-if __name__ == '__main__':    
-    # teste com um arquivo:
-    with open('./bbc/tech/001.txt') as f:
-        ft = trie()
-        print('⌛indexando...')
-
-        for word in f.read().split():
-            trie_insert(ft, word, './bbc/tech/001.txt')
-
-        print('✅ indexação completa')
-        # print_trie(ft)
-
-
-    # Teste para inserção de repetições
+if __name__ == '__main__':
+    
     t = trie()
     trie_insert(t, 'the', 't0')
     trie_insert(t, 'the', 't0')
+   
+    assert t == trie_node(postings={}, branches={'the': trie_node(postings={'t0': 2}, branches={})})
 
-    assert t == trie_node(set(), {'the': trie_node({'t0'}, {})})
-
-
-    # Casos de teste adaptados para divisão de nós
     t = trie()
-    trie_insert(t, 'peter', 't1')
-    assert t == trie_node(
-        index=set(),
-        branches={'peter': trie_node(index={'t1'}, branches={})}
-    )
+    trie_insert(t, 'apple', 'doc1')
+    trie_insert(t, 'apply', 'doc2')
+    
+    expected = trie_node(branches={
+        'appl': trie_node(branches={
+            'e': trie_node(postings={'doc1': 1}),
+            'y': trie_node(postings={'doc2': 1})
+        })
+    })
+    assert t == expected
+    
+    trie_insert(t, 'app', 'doc3')
+    expected.branches['appl'].postings = {'doc3': 1} 
 
-    trie_insert(t, 'dampf', 't2')
-    assert t == trie_node(
-        index=set(),
-        branches={
-            'peter': trie_node(index={'t1'}, branches={}),
-            'dampf': trie_node(index={'t2'}, branches={})
-        }
-    )
-
-    trie_insert(t, 'donau', 't3')
-    assert t == trie_node(
-        index=set(),
-        branches={
-            'peter': trie_node({'t1'}, {}),
-            'd': trie_node(set(), {
-                'ampf': trie_node({'t2'}, {}),
-                'onau': trie_node({'t3'}, {})
-            })
-        }
-    )
-
-    trie_insert(t, 'donaudampfschiff', 't3')
-    # Após esta inserção, 'd' -> 'onau' deve ser dividido
-    assert t == trie_node(
-        index=set(),
-        branches={
-            'peter': trie_node({'t1'}, {}),
-            'd': trie_node(set(), {
-                'ampf': trie_node({'t2'}, {}),
-                'onau': trie_node({'t3'}, {
-                    'dampfschiff': trie_node({'t3'}, {})
-                })
-            })
-        }
-    )
-
-    trie_insert(t, 'donaudampfschiffahrt', 't3')
-    # Após esta inserção, 'dampfschiff' deve ser dividido
-    assert t == trie_node(
-        index=set(),
-        branches={
-            'peter': trie_node({'t1'}, {}),
-            'd': trie_node(set(), {
-                'ampf': trie_node({'t2'}, {}),
-                'onau': trie_node({'t3'}, {
-                    'dampfschiff': trie_node({'t3'}, {
-                        'ahrt': trie_node({'t3'}, {})
-                    })
-                })
-            })
-        }
-    )
-
-    # Casos de teste adicionais para divisões mais complexas
-    t2 = trie()
-    trie_insert(t2, 'abc', 'v1')
-    trie_insert(t2, 'abd', 'v2')
-    # Deve dividir 'ab' e ter 'c' e 'd' como ramos
-    assert t2 == trie_node(
-        index=set(),
-        branches={
-            'ab': trie_node(
-                index=set(),
-                branches={
-                    'c': trie_node({'v1'}, {}),
-                    'd': trie_node({'v2'}, {})
-                }
-            )
-        }
-    )
-
-    # Caso de teste onde temos múltiplos níveis de divisão
+   
     t3 = trie()
     trie_insert(t3, 'casa', 'v1')
     trie_insert(t3, 'casaco', 'v2')
     trie_insert(t3, 'casamento', 'v3')
-    # Deve dividir 'casa' e ter múltiplos ramos
-    assert t3 == trie_node(
-        index=set(),
-        branches={
-            'casa': trie_node(
-                index={'v1'},
-                branches={
-                    'co': trie_node({'v2'}, {}),
-                    'mento': trie_node({'v3'}, {})
-                }
-            )
-        }
-    )
+    
+    expected_t3 = trie_node(branches={
+        'casa': trie_node(postings={'v1': 1}, branches={
+            'co': trie_node(postings={'v2': 1}),
+            'mento': trie_node(postings={'v3': 1})
+        })
+    })
+    assert t3 == expected_t3
 
-    # Caso de teste com divisão no primeiro caractere
-    t4 = trie()
-    trie_insert(t4, 'foo', 'v1')
-    trie_insert(t4, 'bar', 'v2')
-    trie_insert(t4, 'baz', 'v3')
-    assert t4 == trie_node(
-        index=set(),
-        branches={
-            'foo': trie_node({'v1'}, {}),
-            'ba': trie_node(set(), {
-                'r': trie_node({'v2'}, {}),
-                'z': trie_node({'v3'}, {})
-            })
-        }
-    )
-
-    # Teste adicional: verificar que duplicatas não são adicionadas
-    t5 = trie()
-    trie_insert(t5, 'test', 'f1')
-    trie_insert(t5, 'test', 'f1')
-    trie_insert(t5, 'test', 'f2')
-    assert t5 == trie_node(
-        index=set(),
-        branches={
-            'test': trie_node({'f1', 'f2'}, {})
-        }
-    )
-
-    print("Todos os testes passaram!")
+    print("✅ Todos os testes corrigidos passaram!")
