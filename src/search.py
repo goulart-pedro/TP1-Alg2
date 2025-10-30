@@ -51,7 +51,7 @@ def search_tokenizer(search_str: str):
 
 def trie_search(t: trie_node, word: str) -> dict[str, int]:
     if not word:
-        return t.postings
+        return t.postings.keys()
     
     for key, node in t.branches.items():
         if word.startswith(key):

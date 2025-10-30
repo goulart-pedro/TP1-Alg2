@@ -8,7 +8,7 @@ from src.indexing import (
 )
 from src.relevance import calculate_corpus_stats, rank_by_relevance
 from src.search import corpus_search, search_tokenizer
-from src.utils import generate_snippet
+from src.snippet import generate_snippet
 
 CORPUS_ZIP_FILE = 'bbc-fulltext.zip'
 INDEX_FILE_PATH = 'my_corpus.idx'  
