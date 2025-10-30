@@ -1,86 +1,81 @@
-from dataclasses import dataclass, field
+import os
 from flask import Flask, render_template, request
-from typing import Dict, Optional
-from src.indexing import build_index_from_zip
+from src.indexing import (
+    build_index_from_zip, 
+    load_documents_into_memory, 
+    save_index_to_disk,
+    load_index_from_disk
+)
 from src.relevance import calculate_corpus_stats, rank_by_relevance
 from src.search import corpus_search, search_tokenizer
+from src.utils import generate_snippet
 
-CORPUS_ZIP_FILE = 'bbc-fulltext.zip' 
+CORPUS_ZIP_FILE = 'bbc-fulltext.zip'
+INDEX_FILE_PATH = 'my_corpus.idx'  
+RESULTS_PER_PAGE = 10              
 
 app = Flask(__name__)
 
-TRIE_ROOT = build_index_from_zip(CORPUS_ZIP_FILE)
+# este bloco roda UMA VEZ quando o servidor é iniciado
+print("--- INICIANDO SERVIDOR DE BUSCA ---")
+
+# persistencia do índice
+if os.path.exists(INDEX_FILE_PATH):
+    print(f"Passo 1/3: Carregando índice de '{INDEX_FILE_PATH}'...")
+    TRIE_ROOT = load_index_from_disk(INDEX_FILE_PATH)
+else:
+    print(f"Passo 1/3: Construindo índice de '{CORPUS_ZIP_FILE}'...")
+    TRIE_ROOT = build_index_from_zip(CORPUS_ZIP_FILE)
+    save_index_to_disk(TRIE_ROOT, INDEX_FILE_PATH)
+
+print("Passo 2/3: Calculando estatísticas do corpus para z-score...")
 CORPUS_STATS = calculate_corpus_stats(TRIE_ROOT)
 
-@app.route("/")
-def handle_search(methods=['POST', 'GET']):
-    _query: str = request.args.get('query', '')
+print("Passo 3/3: Carregando conteúdo dos documentos para snippets...")
+ALL_DOCUMENTS = load_documents_into_memory(CORPUS_ZIP_FILE)
 
-    if _query == '':
+print("--- SERVIDOR PRONTO ---")
+
+
+@app.route("/", methods=['GET']) 
+def handle_search():
+    query = request.args.get('query', '')
+    page = request.args.get('page', 1, type=int)
+
+    if not query:
         return render_template('index.html')
-    else:
-        tokens = search_tokenizer(_query)
-        matching_docs = corpus_search(TRIE_ROOT, tokens)
-        query_terms = [tvalue for ttype, tvalue in tokens if ttype == 'keyword']
-        ranked_docs = rank_by_relevance(matching_docs, query_terms, TRIE_ROOT, CORPUS_STATS)
-        return render_template('results.html', query=_query, results=ranked_docs)
-
-        
-# ((key) (labels))
-# test tester testing tesla
-
-
-# node padrão: {id, dict("test", {...})}
-# node folha:  {id, dict()}
-# id é algo como o nome do arquivo
-@dataclass
-class trie_node:
-   
-    postings: Dict[str, int] = field(default_factory=dict)
-    branches: Dict[str, 'trie_node'] = field(default_factory=dict)
-
-def trie():
-    return trie_node(None, dict())
-
-def trie_insert(root: trie_node, word: str, filename: str):
     
-    # CASO BASE
-    if not word:
-        root.index = filename
-        return
-    for key, child_node in root.branches.items():
-        common_prefix = ""
-        for i in range(min(len(word), len(key))):
-            if word[i] != key[i]:
-                break
-            common_prefix += word[i]
-        if not common_prefix:
-            continue
-        
-        # CASO 1: a palavra inteira cabe perfeitamente em um galho que ja existe
-        if common_prefix == key:
-            rest_of_word = word[len(key):]
-            trie_insert(child_node, rest_of_word, filename)
-            return 
-        
-        # CASO 2: a inserção precisa da divisao de um galho
-        else: 
-            root.branches.pop(key)
-            intermediate_node = trie_node(None, dict())
-            rest_of_key = key[len(common_prefix):]
-            intermediate_node.branches[rest_of_key] = child_node
-            rest_of_word = word[len(common_prefix):]
-            new_leaf_node = trie_node(filename, dict())
-            intermediate_node.branches[rest_of_word] = new_leaf_node
-            root.branches[common_prefix] = intermediate_node
-            return 
+    # tokeniza a query e executa a busca booleana    
+    tokens = search_tokenizer(query)
+    matching_docs = corpus_search(TRIE_ROOT, tokens)
+    
+    # extrai as palavras chave e ordena os documentos por relevancia
+    query_keywords = [tvalue for ttype, tvalue in tokens if ttype == 'keyword']
+    ranked_docs = rank_by_relevance(matching_docs, query_keywords, TRIE_ROOT, CORPUS_STATS)
 
-    root.branches[word] = trie_node(filename, dict())
+    # paginaçao
+    start_index = (page - 1) * RESULTS_PER_PAGE
+    end_index = start_index + RESULTS_PER_PAGE
+    paginated_docs = ranked_docs[start_index:end_index]
 
-# visualizaçao
-def print_trie(node: trie_node, prefix=""):
-    if node.index is not None:
-        print(f"{prefix} -> (Arquivo: {node.index})")
-    for key, child in node.branches.items():
-        print(f"{prefix}[{key}]")
-        print_trie(child, prefix + "  ")
+    # snippets
+    final_results = []
+    primary_term = query_keywords[0] if query_keywords else "" # destaque
+    for doc_name in paginated_docs:
+        full_content = ALL_DOCUMENTS.get(doc_name, "")
+        snippet = generate_snippet(full_content, primary_term)
+        final_results.append({'filename': doc_name, 'snippet': snippet})
+
+    total_pages = (len(ranked_docs) + RESULTS_PER_PAGE - 1) // RESULTS_PER_PAGE
+
+    return render_template(
+        'results.html', 
+        query=query, 
+        results=final_results,
+        page=page,
+        total_pages=total_pages,
+        total_results=len(ranked_docs)
+    )
+
+if __name__ == '__main__':
+    app.run(debug=True)
