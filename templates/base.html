@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Index</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+    </head>
+    <body>
+      <div class="view-wrapper">
+      {% block content %}{% endblock %}
+      </div>
+      <footer>
+        Desenvolvido por Pedro Goulart e Paula D'Agostini
+      </footer>
+    </body>
+</html>

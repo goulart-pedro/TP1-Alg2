@@ -1,15 +1,47 @@
-<!doctype html>
-<form>
+{% extends "base.html" %}
+{% block content %}
+<div class="main">
+  <form>
     <input name="query" type="text">
-    <input type="submit" value="enviar">
-</form>
+    <input type="submit" value="Pesquisar">
+  </form>
 
-<h1>Mostrando resultados para</h1>
-<p>{{query}}</p>
+  <h1>{{length}} Resultados para "{{query}}"</h1>
 
-{% for result in results %}
-<div>
-  <h3>{{result}}</h3>
-  <p> snippet</p>
+  <hr/>
+
+  {% for result in results %}
+  <div class="result-card">
+    <h3 class="result-title">
+      <a href="{{result}}">{{result}}</a></h3>
+    <p class="result-snippet">
+      Proin nibh nisl, condimentum id venenatis a, condimentum vitae sapien pellentesque habitant morbi tristique senectus? Vel, pharetra vel turpis nunc eget lorem dolor, sed viverra ipsum nunc aliquet bibendum enim, facilisis gravida! Quam nulla porttitor massa id neque aliquam! In est ante in nibh mauris, cursus mattis molestie a, iaculis at erat pellentesque adipiscing commodo elit, at imperdiet dui accumsan sit amet nulla facilisi morbi tempus iaculis urna, id. Amet risus nullam eget felis eget nunc lobortis mattis aliquam faucibus purus in massa tempor nec feugiat nisl pretium fusce id velit? Nunc vel risus commodo viverra maecenas accumsan, lacus vel facilisis volutpat, est velit egestas dui, id ornare arcu. Dignissim cras tincidunt lobortis feugiat vivamus at augue eget arcu dictum varius duis at! Molestie a, iaculis at erat pellentesque adipiscing commodo elit, at imperdiet dui accumsan sit amet! Habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas maecenas pharetra convallis posuere morbi leo urna, molestie at elementum?
+    </p>
+  </div>
+  {% endfor %}
+  <div class="page-area">
+    <div class="page-button-wrapper">
+      {% for page_num in range(1, total_pages + 1) %}
+      <a href="?query={{query}}&page={{page_num}}" 
+         class="page-button {% if page_num == current_page %}active{% endif %}">
+        {{ page_num }}
+      </a>
+      {% endfor %}
+    </div>
+  
+    <div class="page-controls-wrapper">
+      <a href="?query={{query}}&page={{current_page-1}}" 
+         class="page-control {% if current_page <= 1 %}disabled{% endif %}">
+        Anterior
+      </a>
+      <a href="?query={{query}}&page={{current_page+1}}" 
+         class="page-control {% if current_page >= total_pages %}disabled{% endif %}">
+        Mais
+      </a>
+    </div>
+  </div>
+  
 </div>
-{% endfor %}
+
+
+{% endblock %}  

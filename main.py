@@ -8,10 +8,19 @@ app = Flask(__name__)
 @app.route("/")
 def handle_search(methods=['POST', 'GET']):
     _query: str = request.args.get('query', '')
-
+    
+    ttrie = trie_node()
+    
     if _query == '':
-        return render_template('index.html')
+        return render_template(
+            'index.html',
+            corpus_was_indexed = len(ttrie.branches)!= 0
+        )
     else:
+        _page_num = request.args.get('page', 1, type=int)
+        current_page = request.args.get('page', 1, type=int)
+        
+
         ttrie = trie_node(set(), {
             'h': trie_node(set(), {
                 'onolulu': trie_node({'Havaí'}, {}),
@@ -31,7 +40,13 @@ def handle_search(methods=['POST', 'GET']):
         
         search_tokens = search_tokenizer(_query)
         _results = list(corpus_search(ttrie, search_tokens))
-        print(search_tokens)
-        print(_results)
-        
-        return render_template('results.html', query=_query, results=_results)
+        total_pages = (len(_results) + 10 - 1) // 10
+
+        return render_template(
+            'results.html',
+            length=len(_results),
+            query=_query,
+            results=_results[(_page_num -1) * 10: _page_num * 10 - 1],
+            total_pages=total_pages,
+            current_page=current_page
+        )

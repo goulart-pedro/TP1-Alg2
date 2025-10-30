@@ -1,5 +1,23 @@
-<!doctype html>
-<form>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="main">
+  {% if corpus_was_indexed%}
+  <form class="search-area">
     <input name="query" type="text">
-    <input type="submit" value="enviar">
-</form>
+    <input type="submit" value="Pesquisar">
+  </form>
+  {% endif %}
+
+  {% if not corpus_was_indexed %}
+  <div class="corpus-upload-wrapper">
+    <h1>Tá vazio por aqui...</h1>
+    <form class="corpus-upload" action="">
+      <label for="file"><strong>Escolha um corpus para indexar </strong><span class="box__dragndrop">ou o arraste aqui</span>.</label>
+      <input name="" type="file" value=""/>
+      <input name="" type="submit" value="Indexar"/>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
