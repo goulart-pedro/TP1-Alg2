@@ -13,9 +13,9 @@
   {% for result in results %}
   <div class="result-card">
     <h3 class="result-title">
-      <a href="{{result}}">{{result}}</a></h3>
+      <a href="{{result.filename}}">{{result.filename}}</a></h3>
     <p class="result-snippet">
-      Proin nibh nisl, condimentum id venenatis a, condimentum vitae sapien pellentesque habitant morbi tristique senectus? Vel, pharetra vel turpis nunc eget lorem dolor, sed viverra ipsum nunc aliquet bibendum enim, facilisis gravida! Quam nulla porttitor massa id neque aliquam! In est ante in nibh mauris, cursus mattis molestie a, iaculis at erat pellentesque adipiscing commodo elit, at imperdiet dui accumsan sit amet nulla facilisi morbi tempus iaculis urna, id. Amet risus nullam eget felis eget nunc lobortis mattis aliquam faucibus purus in massa tempor nec feugiat nisl pretium fusce id velit? Nunc vel risus commodo viverra maecenas accumsan, lacus vel facilisis volutpat, est velit egestas dui, id ornare arcu. Dignissim cras tincidunt lobortis feugiat vivamus at augue eget arcu dictum varius duis at! Molestie a, iaculis at erat pellentesque adipiscing commodo elit, at imperdiet dui accumsan sit amet! Habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas maecenas pharetra convallis posuere morbi leo urna, molestie at elementum?
+      {{result.snippet | safe}}
     </p>
   </div>
   {% endfor %}

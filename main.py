@@ -9,6 +9,7 @@ from src.indexing import (
 from src.relevance import calculate_corpus_stats, rank_by_relevance
 from src.search import corpus_search, search_tokenizer
 from src.utils import generate_snippet
+from werkzeug.utils import secure_filename
 
 CORPUS_ZIP_FILE = 'bbc-fulltext.zip'
 INDEX_FILE_PATH = 'my_corpus.idx'
@@ -35,9 +36,33 @@ ALL_DOCUMENTS = load_documents_into_memory(CORPUS_ZIP_FILE)
 print("--- SERVIDOR PRONTO ---")
 
 
+@app.route('/upload-direct', methods=['POST'])
+def upload_and_extract_direct():
+    if 'zip_file' not in request.files:
+        return 'Nenhum arquivo selecionado', 400
+    
+    file = request.files['zip_file']
+    
+    if file.filename == '':
+        return 'Nenhum arquivo selecionado', 400
+    
+    if file:
+        # Criar pasta de extração com nome corpus
+        # considerar um nome único caso seja interessante ter vários
+        extract_folder_name = "corpus"
+        extract_path = os.path.join('extractions/corpus', extract_folder_name)
+        os.makedirs(extract_path, exist_ok=True)
+
+        filepath = extract_path + '/' + secure_filename(file.filename)
+        file.save(filepath)
+        app.config['TRIE_ROOT'] = build_index_from_zip(filepath)
+
+        CORPUS_STATS = calculate_corpus_stats(app.config['TRIE_ROOT'])
+        return render_template('index.html', corpus_was_indexed=True)
+
+
 @app.route("/", methods=['GET']) 
 def handle_search():
-   
     query = request.args.get('query', '')
     page = request.args.get('page', 1, type=int)
 
