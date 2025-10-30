@@ -2,8 +2,38 @@ from dataclasses import dataclass, field
 from flask import Flask, render_template, request
 from src.search import corpus_search, search_tokenizer
 from src.insert import trie_node
+from file_upload import upload_and_extract_direct
+import zipfile
+import os
 
 app = Flask(__name__)
+
+@app.route('/upload-direct', methods=['POST'])
+def upload_and_extract_direct():
+    if 'zip_file' not in request.files:
+        return 'Nenhum arquivo selecionado', 400
+    
+    file = request.files['zip_file']
+    
+    if file.filename == '':
+        return 'Nenhum arquivo selecionado', 400
+    
+    if file:
+        try:
+            # Criar pasta de extração com nome corpus
+            # considerar um nome único caso seja interessante ter vários
+            extract_folder_name = "corpus"
+            extract_path = os.path.join('extractions', extract_folder_name)
+            os.makedirs(extract_path, exist_ok=True)
+            
+            # Extrair diretamente do arquivo em memória
+            with zipfile.ZipFile(file.stream, 'r') as zip_ref:
+                zip_ref.extractall(extract_path)
+
+            return render_template('index.html', corpus_was_indexed=True)
+
+        except:
+            return "Algo deu errado"
 
 @app.route("/")
 def handle_search(methods=['POST', 'GET']):

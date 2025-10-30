@@ -21,8 +21,16 @@ body {
 footer {
     padding-top: 1em;
     padding-bottom: 1em;
-    
     color: var(--brand-gray);
+}
+
+.notify {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border: solid 1px var(--brand-gray);
+    border-radius: 10px;
+    margin: 1rem;
 }
 
 input[type='file'] {
@@ -50,6 +58,7 @@ input[type='file'] {
 
 .main {
     max-width: 80ch;
+
 }
 
 h1, h2, h3, h4, a {
