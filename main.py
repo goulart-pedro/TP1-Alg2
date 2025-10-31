@@ -58,7 +58,12 @@ def upload_and_extract_direct():
         CORPUS_STATS = calculate_corpus_stats(app.config['TRIE_ROOT'])
         return render_template('index.html', corpus_was_indexed=True)
 
-
+@app.route("/view", methods=['GET'])
+def handle_view():
+    filepath = request.args.get('file')
+    file = open(filepath); contents = file.read(); file.close
+    return render_template('page_view.html', doc_title=filepath, doc_content=contents)
+    
 @app.route("/", methods=['GET']) 
 def handle_search():
     query = request.args.get('query', '')
