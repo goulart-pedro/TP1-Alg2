@@ -1,4 +1,6 @@
 # 1° Trabalho Prático de Algoritmos 2
+## Alunos: Pedro Bernardo e Paula D'Agostini
+
 ## Dependências
 ### flask
 `pip3 install flask`
