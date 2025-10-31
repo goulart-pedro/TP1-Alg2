@@ -8,7 +8,7 @@ from src.indexing import (
 )
 from src.relevance import calculate_corpus_stats, rank_by_relevance
 from src.search import corpus_search, search_tokenizer
-from src.utils import generate_snippet
+from src.utils import generate_snippet, find_best_term_for_snippet
 from werkzeug.utils import secure_filename
 
 CORPUS_ZIP_FILE = 'bbc-fulltext.zip'
@@ -80,11 +80,15 @@ def handle_search():
     paginated_docs = ranked_docs[start_index:end_index]
 
     final_results = []
-    primary_term = query_keywords[0] if query_keywords else ""
     for doc_name in paginated_docs:
-
+        best_term = find_best_term_for_snippet(
+            doc_name, query_keywords, TRIE_ROOT, CORPUS_STATS
+        )
+        
         full_content = ALL_DOCUMENTS.get(doc_name, "")
-        snippet = generate_snippet(full_content, primary_term)
+        
+        snippet = generate_snippet(full_content, best_term, query_keywords)
+        
         final_results.append({'filename': doc_name, 'snippet': snippet})
 
     total_pages = (len(ranked_docs) + RESULTS_PER_PAGE - 1) // RESULTS_PER_PAGE
