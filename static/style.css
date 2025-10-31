@@ -12,6 +12,18 @@ body {
     font-family: var(--brand-font);
 }
 
+.corpus-selection {
+    display: flex;
+    justify-content: center;
+    gap: 6rem;
+    width: 100%;
+    overflow: scroll;
+}
+
+.highlight {
+    font-weight: bold;
+}
+
 .view-wrapper {
     display: flex;
     justify-content: center;

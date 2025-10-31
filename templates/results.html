@@ -13,7 +13,7 @@
   {% for result in results %}
   <div class="result-card">
     <h3 class="result-title">
-      <a href="/?view={{result.filename}}">{{result.filename}}</a></h3>
+      <a href="/view?file={{result.filename}}">{{result.filename}}</a></h3>
     <p class="result-snippet">
       {{result.snippet | safe}}
     </p>

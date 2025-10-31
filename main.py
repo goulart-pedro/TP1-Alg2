@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, request
+from src.insert import trie
 from src.indexing import (
     build_index_from_zip, 
     save_index_to_disk,
@@ -11,35 +12,42 @@ from src.utils import generate_snippet
 from werkzeug.utils import secure_filename
 
 CORPUS_ZIP_FILE = 'bbc-fulltext.zip'
-INDEX_FILE_PATH = 'my_corpus.idx'
+INDEX_FILE_PATH = 'index.idx'
 RESULTS_PER_PAGE = 10
 
 app = Flask(__name__)
 
 app.config['CORPUS_PATH'] = 'bbc'
+app.config['TRIE_ROOT'] = trie()
 
 print("--- INICIANDO SERVIDOR DE BUSCA ---")
 
 if  os.path.exists(INDEX_FILE_PATH):
     print(f"Passo 1/2: Carregando índice de '{INDEX_FILE_PATH}'...")
-    TRIE_ROOT = load_index_from_disk(INDEX_FILE_PATH)
+    app.config['TRIE_ROOT'] = load_index_from_disk(INDEX_FILE_PATH)
 else:
     print(f"Passo 1/2: Construindo índice de '{CORPUS_ZIP_FILE}'...")
-    TRIE_ROOT = build_index_from_zip(app.config['CORPUS_PATH'], CORPUS_ZIP_FILE)
-    save_index_to_disk(TRIE_ROOT, INDEX_FILE_PATH)
+    app.config['TRIE_ROOT'] = load_index_from_disk(app.config['CORPUS_PATH'], CORPUS_ZIP_FILE)
+    save_index_to_disk(app.config['TRIE_ROOT'], INDEX_FILE_PATH)
 
 print("Passo 2/2: Calculando estatísticas do corpus para z-score...")
-CORPUS_STATS = calculate_corpus_stats(TRIE_ROOT)
+CORPUS_STATS = calculate_corpus_stats(app.config['TRIE_ROOT'])
 
 print("--- SERVIDOR PRONTO ---")
+
+@app.route('/save', methods=['GET'])
+def handle_save():
+    with open(INDEX_FILE_PATH, 'w') as file:
+        save_index_to_disk(app.config['TRIE_ROOT'], INDEX_FILE_PATH)
+        return render_template('index.html', corpus_was_indexed=True, corpus_name=os.path.basename(INDEX_FILE_PATH))
 
 
 @app.route('/upload-direct', methods=['POST'])
 def upload_and_extract_direct():
-    if 'zip_file' not in request.files:
+    if 'index_file' not in request.files:
         return 'Nenhum arquivo selecionado', 400
     
-    file = request.files['zip_file']
+    file = request.files['index_file']
     
     if file.filename == '':
         return 'Nenhum arquivo selecionado', 400
@@ -53,7 +61,7 @@ def upload_and_extract_direct():
 
         filepath = extract_path + '/' + secure_filename(file.filename)
         file.save(filepath)
-        app.config['TRIE_ROOT'] = build_index_from_zip(app.config['CORPUS_PATH'], filepath)
+        app.config['TRIE_ROOT'] = load_index_from_disk(INDEX_FILE_PATH)
 
         CORPUS_STATS = calculate_corpus_stats(app.config['TRIE_ROOT'])
         return render_template('index.html', corpus_was_indexed=True)
@@ -69,14 +77,16 @@ def handle_search():
     query = request.args.get('query', '')
     page = request.args.get('page', 1, type=int)
 
+    trie_is_empty = app.config['TRIE_ROOT'] == trie()
+
     if not query:
-        return render_template('index.html')
+        return render_template('index.html', corpus_was_indexed=not trie_is_empty, corpus_name=os.path.basename(INDEX_FILE_PATH))
     
     tokens = search_tokenizer(query)
-    matching_docs = corpus_search(TRIE_ROOT, tokens)
+    matching_docs = corpus_search(app.config['TRIE_ROOT'], tokens)
     
     query_keywords = [tvalue for ttype, tvalue in tokens if ttype == 'keyword']
-    ranked_docs = rank_by_relevance(matching_docs, query_keywords, TRIE_ROOT, CORPUS_STATS)
+    ranked_docs = rank_by_relevance(matching_docs, query_keywords, app.config['TRIE_ROOT'], CORPUS_STATS)
 
 
     # calcula a os resultados da página atual
