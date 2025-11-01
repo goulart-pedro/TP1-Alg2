@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="main">
-  <form>
-    <input name="query" type="text">
-    <input type="submit" value="Pesquisar">
+  <form action="/">
+  <div class="search-container">
+    <div class="search-row">
+      <input type="text" name='query' class="search-input" placeholder="Digite sua busca aqui...">
+      <button class="search-button">Buscar</button>
+    </div>
+  </div>
   </form>
 
   <h1>{{length}} Resultados para "{{query}}"</h1>
 
-  <hr/>
 
   {% for result in results %}
   <div class="result-card">

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+  <div class="corpus-selection">  
+    <div class="corpus-upload-wrapper">
+    <h1>Tá vazio por aqui...</h1>
+    <form class="corpus-upload" method="POST" enctype=multipart/form-data action="/upload-direct">
+      <label for="file"><strong>Escolha um corpus para indexar </strong><span class="box__dragndrop">ou o arraste aqui</span>.</label>
+      <input type="file" name="index_file" accept=".idx" required>
+      <input name="" type="submit" value="Indexar"/>
+    </form>
+  </div>
+  </div>
+
+
+{% endblock %}

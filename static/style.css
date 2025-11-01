@@ -2,38 +2,173 @@
     --brand-dark: #222222;
     --brand-light: whitesmoke;
     --brand-gray: gray;
-    --brand-title-font: 'CMU Concrete';
-    --brand-font: 'Roboto'
+    --brand-title-font: 'sans-serif';
+    --brand-font: 'sans-serif'
 }
 
 body {
     background-color: var(--brand-light);
     color: var(--brand-dark);
     font-family: var(--brand-font);
+    margin: 0;
+    padding: 0;
 }
 
+.view-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+.main {
+    max-width: 80ch;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.search-container {
+    width: 100%;
+    max-width: 600px;
+}
+
+.search-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+
+.corpus-title {
+    flex: 1;
+    margin: 0;
+    text-align: center;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-row {
+    display: flex;
+    margin-bottom: 15px;
+    width: 100%;
+    align-items: center;
+}
+
+.search-input, .search-button {
+    height: 2.5rem;
+    box-sizing: border-box;
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.search-input {
+    flex: 1;
+    margin-right: 10px;
+    min-width: 400px;
+}
+
+.search-button {
+    width: auto;
+    min-width: 100px;
+}
+
+.links-row {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+}
+
+.search-link {
+    text-decoration: none;
+    color: #0066cc;
+}
+
+/* Corpus Selection Styles */
 .corpus-selection {
     display: flex;
     justify-content: center;
-    gap: 6rem;
+    align-items: center;
     width: 100%;
-    overflow: scroll;
+    min-height: 60vh;
+}
+
+.corpus-upload-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 100%;
+    max-width: 500px;
+}
+
+.corpus-upload-wrapper h1 {
+    margin-bottom: 2rem;
+    font-size: 1.5rem;
+}
+
+.corpus-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+}
+
+.corpus-upload label {
+    font-size: 1rem;
+    color: var(--brand-gray);
+    line-height: 1.5;
+}
+
+.corpus-upload label strong {
+    color: var(--brand-dark);
+}
+
+.corpus-upload input[type="file"] {
+    width: 100%;
+    padding: 2rem;
+    border: 2px dashed var(--brand-gray);
+    border-radius: 10px;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.corpus-upload input[type="file"]:hover {
+    border-color: var(--brand-dark);
+}
+
+.corpus-upload input[type="submit"] {
+    height: 2.5rem;
+    padding: 0 2rem;
+    cursor: pointer;
+    font-size: 1rem;
+
+}
+
+.corpus-upload input[type="submit"]:hover {
+    background: #444444;
 }
 
 .highlight {
     font-weight: bold;
 }
 
-.view-wrapper {
-    display: flex;
-    justify-content: center;
-    min-height: 100vh;
-}
-
 footer {
     padding-top: 1em;
     padding-bottom: 1em;
     color: var(--brand-gray);
+    text-align: center;
+    width: 100%;
+    margin-top: auto;
 }
 
 .notify {
@@ -45,32 +180,16 @@ footer {
     margin: 1rem;
 }
 
-input[type='file'] {
-    padding: 2em;
-    border: 2px dashed var(--brand-gray);
-    border-radius: 10px;
-}
-
-.corpus-upload-wrapper {
-    margin-top: 50%;
-    margin-bottom: 50%;
-}
-
-.corpus-upload {
+.search-wrapper {
     display: flex;
-    gap: 1em;
-    justify-content: center;
     flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    width: 100%;
 }
 
-.corpus-upload-wrapper label {
-    font-size: 14px;
-    color: var(--brand-gray);
-}
-
-.main {
-    max-width: 80ch;
-
+.search-area input[type='file'] {
+    width: 100%;
 }
 
 h1, h2, h3, h4, a {
@@ -84,6 +203,7 @@ h1, h2, h3, h4, a {
   gap: 1rem;
   align-items: center;
   margin-top: auto;
+  width: 100%;
 }
 
 .page-button-wrapper {
@@ -101,7 +221,6 @@ h1, h2, h3, h4, a {
 .page-button,
 .page-control {
   padding: 0.5rem 1rem;
-
 }
 
 .page-button:hover,

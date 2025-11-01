@@ -3,32 +3,20 @@
 {% block content %}
 
 <div class="main">
-  {% if corpus_was_indexed %}
-  <div class="notify">
-    <span>Corpus indexado com sucesso</span>
-    <button>Ok</button>
-  </div>
   <h1>{{corpus_name}}</h1>
-  <form class="search-area" action='/'>
-    <label for="query"><strong>Pesquise neste corpus</strong></label>
-    <input name="query" type="text">
-    <input type="submit" value="Pesquisar">
-    <a href="/save">Salve este índice</a>
-  </form>
-  {% endif %}
 
-  {% if not corpus_was_indexed %}
-  <div class="corpus-selection">  
-    <div class="corpus-upload-wrapper">
-    <h1>Tá vazio por aqui...</h1>
-    <form class="corpus-upload" method="POST" enctype=multipart/form-data action="/upload-direct">
-      <label for="file"><strong>Escolha um corpus para indexar </strong><span class="box__dragndrop">ou o arraste aqui</span>.</label>
-      <input type="file" name="index_file" accept=".idx" required>
-      <input name="" type="submit" value="Indexar"/>
-    </form>
+  <form action="/">
+  <div class="search-container">
+    <div class="search-row">
+      <input type="text" name='query' class="search-input" placeholder="Digite sua busca aqui...">
+      <button class="search-button">Buscar</button>
+    </div>
+    <div class="links-row">
+      <a href="/save" class="search-link">Salve este Índice</a>
+      <a href="/upload" class="search-link">Carregue um novo</a>
+    </div>
   </div>
-  </div>
-  
-  {% endif %}
+  </form>
+
 </div>
 {% endblock %}
