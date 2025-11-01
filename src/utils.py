@@ -1,5 +1,6 @@
 import re
 from typing import List, Dict
+
 from .insert import trie_node
 from .search import trie_search
 
@@ -9,33 +10,26 @@ def generate_snippet(
     all_terms: List[str], 
     context_chars: int = 80
 ) -> str:
-    """
-    Gera um snippet centralizado no 'center_term', destacando todos os 'all_terms'
-    apenas como palavras inteiras (não substrings).
-    """
+    
+    #Gera um snippet centralizado no 'center_term', mas destaca todos os 'all_terms'.
+    
     if not center_term:
         center_term = all_terms[0] if all_terms else ""
         if not center_term: return document_content[:context_chars*2] + "..."
 
-  
-    center_pattern = r'(^|\W)(' + re.escape(center_term) + r')(\W|$)'
-    match = re.search(center_pattern, document_content, re.IGNORECASE)
-    
+    match = re.search(re.escape(center_term), document_content, re.IGNORECASE)
     if not match:
         return document_content[:context_chars * 2] + "..."
-    
-    start_pos = match.start(2)
-    end_pos = match.end(2)
 
+    start_pos = match.start()
     snippet_start = max(0, start_pos - context_chars)
-    snippet_end = min(len(document_content), end_pos + context_chars)
+    snippet_end = min(len(document_content), start_pos + len(center_term) + context_chars)
     raw_snippet = document_content[snippet_start:snippet_end]
     
-    terms_pattern = "|".join(re.escape(term) for term in all_terms if term)
+    highlight_pattern = "|".join(re.escape(term) for term in all_terms if term)
     
-    if terms_pattern:
-        highlight_pattern = r'(^|\W)(' + terms_pattern + r')(\W|$)'
-        highlighted = re.sub(highlight_pattern, r'\1<b>\2</b>\3', raw_snippet, flags=re.IGNORECASE)
+    if highlight_pattern:
+        highlighted = re.sub(f'({highlight_pattern})', r'<b>\1</b>', raw_snippet, flags=re.IGNORECASE)
     else:
         highlighted = raw_snippet
     
@@ -50,6 +44,9 @@ def find_best_term_for_snippet(
     trie: trie_node,
     corpus_stats: Dict[str, Dict[str, float]]
 ) -> str:
+    
+   # Encontra o termo da busca com o maior z-score em um documento específico.
+
     best_term = ""
     max_z_score = -float('inf')
 
