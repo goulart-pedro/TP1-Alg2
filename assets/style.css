@@ -1,0 +1,219 @@
+/* assets/style.css */
+
+/* Estilos gerais */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+}
+
+.main-container {
+    background-color: #f0f2f5;
+    min-height: 100vh;
+}
+
+.content-wrapper {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Títulos */
+.main-title {
+    text-align: center;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 2.5em;
+    font-weight: 600;
+}
+
+.section-title {
+    margin-top: 30px;
+    color: #2c3e50;
+    font-size: 1.8em;
+    font-weight: 500;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 10px;
+}
+
+/* Instruções/info */
+.info-text {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    margin: 5px 0;
+}
+
+.info-text strong {
+    color: #2c3e50;
+}
+
+.counters-container {
+    text-align: center;
+    margin-top: 15px;
+    color: #666;
+    padding: 10px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.counters-text {
+    margin: 0;
+    font-size: 14px;
+}
+
+.counters-text strong {
+    color: #2c3e50;
+}
+
+/* Barra de pesquisa */
+.search-container {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.search-label {
+    font-weight: bold;
+    margin-right: 10px;
+    color: #2c3e50;
+}
+
+.search-input {
+    width: 300px;
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 5px rgba(52,152,219,0.3);
+}
+
+/* Mapa */
+.map-container {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    margin: 10px;
+    margin-bottom: 20px;
+}
+
+/* Tabela */
+.table-wrapper {
+    margin-top: 20px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilos para a DataTable (sobrescrevendo padrões) */
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner {
+    border-radius: 8px;
+}
+
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner th {
+    background-color: #2c3e50 !important;
+    color: white !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    padding: 12px !important;
+}
+
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner td {
+    text-align: left !important;
+    padding: 10px !important;
+}
+
+/* Cores alternadas das linhas da tabela */
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:nth-child(even) {
+    background-color: #f8f9fa !important;
+}
+
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:nth-child(odd) {
+    background-color: #e9ecef !important;
+}
+
+.dash-table-container .dash-spreadsheet-container .dash-spreadsheet-inner tr:hover {
+    background-color: #d4edda !important;
+}
+
+/* Paginação */
+.dash-table-container .previous-next-container .page-number {
+    background-color: #f8f9fa;
+    border-color: #dee2e6;
+    color: #2c3e50;
+}
+
+.dash-table-container .previous-next-container .page-number:hover {
+    background-color: #3498db;
+    color: white;
+}
+
+/* Filtros da tabela */
+.dash-filter input {
+    border-radius: 4px;
+    border: 1px solid #ced4da;
+    padding: 4px 8px;
+}
+
+/* Botão de exportação */
+.export {
+    background-color: #3498db !important;
+    color: white !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+}
+
+.export:hover {
+    background-color: #2980b9 !important;
+}
+
+.search-partials .partial-item:first-child {
+    color: blue;
+    border: 1px solid blue;
+    border-radius: 1em;
+    background-color: #aaaaff;
+}
+
+.partial-item {
+    padding: 1em;
+    text-align: left;
+}
+
+.partial-name {
+    margin-right: 1em;
+}
+
+.partial-address {
+    font-style: italic;
+    font-weight: lighter;
+    color: #808080;
+}
+
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 10px;
+    }
+    
+    .main-title {
+        font-size: 1.8em;
+    }
+    
+    .section-title {
+        font-size: 1.4em;
+    }
+    
+    .search-input {
+        width: 90%;
+    }
+}
