@@ -10,7 +10,7 @@ bhz = (-19.9102, -43.9266)
 
 # Carregar coordenadas do arquivo results37-128.txt
 points = []
-with open('results37-128.txt', 'r', encoding='utf-8') as sample_file:
+with open('coordinates.txt', 'r', encoding='utf-8') as sample_file:
     for line in sample_file:
         line = line.strip()
         if not line or line == ',':
