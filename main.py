@@ -1,6 +1,6 @@
 import csv
 from dash_extensions.javascript import assign
-from dash import Dash, html, dcc, callback, Output, Input, State, dash_table
+from dash import Dash, html, dcc, callback, Output, Input, State, dash_table, no_update
 import dash_leaflet as dl
 import dash_leaflet.express as dlx
 from dash_extensions.enrich import DashProxy
@@ -10,7 +10,7 @@ bhz = (-19.9102, -43.9266)
 
 # Carregar coordenadas do arquivo results37-128.txt
 points = []
-with open('results37-128.txt', 'r', encoding='utf-8') as sample_file:
+with open('coordinates.txt', 'r', encoding='utf-8') as sample_file:
     for line in sample_file:
         line = line.strip()
         if not line or line == ',':
@@ -29,8 +29,6 @@ with open('results37-128.txt', 'r', encoding='utf-8') as sample_file:
         except (ValueError, IndexError):
             continue
 
-print(f"Carregadas {len(points)} coordenadas do arquivo results37-128.txt")
-
 # Carregar butecos do CSV
 butecos = []
 with open('butecos_bh.csv', 'r', encoding='utf-8') as csv_file:
@@ -43,9 +41,7 @@ with open('butecos_bh.csv', 'r', encoding='utf-8') as csv_file:
             'lon': points[i]['lon']
         })
 
-
-print(f"Carregados {len(butecos)} butecos do CSV")
-
+print('Indice Carregado')
 # Criar geojson para o mapa
 geojson_data = dlx.dicts_to_geojson(points)
 
@@ -53,6 +49,8 @@ app = DashProxy(__name__)
 
 app.layout = html.Div([
     html.Div([
+        # Componentes invisíveis para estado compartilhado
+        dcc.Store(id='search-state', data=None),
         html.H1("Mapa de Butecos - Belo Horizonte", className="main-title"),
         
         # Instruções
@@ -139,6 +137,15 @@ app.layout = html.Div([
 ], className="main-container")
 
 
+def filter_butecos(butecos, search_value):
+    search_lower = search_value.lower()
+    
+    return [
+        b for b in butecos 
+        if search_lower in b['name'].lower() or search_lower in b['address'].lower()
+    ]
+
+
 # Callback para os resultados parciais de busca
 @callback(
     Output('search-partials', 'children'),
@@ -149,10 +156,7 @@ def search_partials(search_value):
         return []
     
     search_lower = search_value.lower()
-    filtered_butecos = [
-        b for b in butecos 
-        if search_lower in b['name'].lower() or search_lower in b['address'].lower()
-    ]
+    filtered_butecos = filter_butecos(butecos, search_value)
 
     partial = lambda buteco: html.Div(className='partial-item', children=[
         html.Span(buteco['name'], className='partial-name'),
@@ -165,8 +169,8 @@ def search_partials(search_value):
 # centralização do mapa após seleção de resultado
 @callback(
     Output('map-container', 'center'),
-    Output('map-container', 'zoom'),
     Output('search-input', 'value'),
+    Output('search-state', 'data'),
     Input('search-input', 'n_submit'),
     State('search-input', 'value'),
     prevent_initial_call=True
@@ -174,24 +178,30 @@ def search_partials(search_value):
 def search_on_enter(n_submit, search_value):
     if n_submit and search_value and search_value.strip():
         search_lower = search_value.lower()
-        filtered_butecos = [
-            b for b in butecos 
-            if search_lower in b['name'].lower() or search_lower in b['address'].lower()
-        ][:10]
+        filtered_butecos = filter_butecos(butecos, search_value)
 
         # se existem sugestões de busca, selecione a primeira e centralize-a
-        # no mapa com zoom 16
         if filtered_butecos:
-            return (filtered_butecos[0]['lat'], filtered_butecos[0]['lon']), 16, ''
+            return (filtered_butecos[0]['lat'], filtered_butecos[0]['lon']), '', filtered_butecos[0]
 
-        # se não, retornar centro e zoom padrão (cuidado para deixar igual)
+        # se não, não modificar
         else:
-            return bhz, 11.5, ''
+            return no_update, '', no_update
 
         # de qlq modo o campo de busca é limpo
         # e consequentemente as sugestões somem
     
     return bhz
+
+
+# EM HIPOTESE ALGUMA ATUALIZE O ZOOM E O CENTRO AO MESMO TEMPO
+@callback(
+    Output('map-container', 'zoom'),
+    Input('map-container', 'center'),
+    prevent_initial_call=True
+)
+def update_zoom(search_state):
+    return 16
 
 
 # Callback para filtrar a tabela
@@ -202,11 +212,8 @@ def search_on_enter(n_submit, search_value):
 def update_table(search_value):
     if search_value and search_value.strip():
         search_lower = search_value.lower()
-        filtered_butecos = [
-            b for b in butecos 
-            if search_lower in b['name'].lower() or search_lower in b['address'].lower()
-        ]
-        return filtered_butecos
+        return filter_butecos(butecos, search_value)
+
     return butecos
 
 if __name__ == "__main__":
