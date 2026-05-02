@@ -71,27 +71,38 @@ body {
 .search-container {
     margin-bottom: 20px;
     text-align: center;
-}
+    display: flex;
 
-.search-label {
-    font-weight: bold;
-    margin-right: 10px;
-    color: #2c3e50;
 }
 
 .search-input {
-    width: 300px;
+    margin-right: 2em;
     padding: 8px 12px;
     border-radius: 5px;
     border: 1px solid #ccc;
     font-size: 14px;
     transition: all 0.3s ease;
+    flex-grow: 1;
 }
 
 .search-input:focus {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 5px rgba(52,152,219,0.3);
+}
+
+#radius-input {
+    width: 2em;
+}
+
+
+/* https://blog.logrocket.com/truncate-text-css/ */
+.search-container button {
+    overflow: hidden;
+    max-width: 25ch; /* |Avenida dos Andradas, XXX| */
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    flex-shrink: 0;
 }
 
 /* Mapa */
