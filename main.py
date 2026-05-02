@@ -82,8 +82,8 @@ app.layout = html.Div([
             ),
             # value sincroniza com o estado inicial, dps tentar mudar isso no
             # runtime com alguma função
-            dcc.Input(id='radius-input', type='number', value=2),
-            dcc.Button(id='clear'),
+            dcc.Input(className='radius-input', id='radius-input', type='number', value=2),
+            dcc.Button(id='clear', children=html.Span('x')),
             # html.Div(id='search-partials', className='search-partials')
         ], className="search-container"),
         
@@ -159,13 +159,14 @@ def clear_selection(n_clicks):
 
 @callback(
     Output('clear', 'children'),
+    Output('clear', 'style'),
     Input('search-state', 'data')
 )
 def update_address_display(center):
     if center is None:
-        return 'Nada selecionado'
+        return 'Nada selecionado', {'display': 'none'}
 
-    return center['address'] + ' ✕'
+    return [html.Span(children=center['address'], className='address-text'), html.Span(children=' ✕')], {'display': 'block'}
 
 
 @callback(
