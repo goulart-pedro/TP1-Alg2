@@ -53,7 +53,7 @@ app.layout = html.Div([
     html.Div([
         # Componentes invisíveis para estado compartilhado
         dcc.Store(id='search-state', data=None),
-        dcc.Store(id='search-radius', data=2),
+        dcc.Store(id='search-radius', data=2), # Raio inicial de 2km
         html.H1("Mapa da Breja - Belo Horizonte", className="main-title"),
         
         # Instruções
@@ -80,7 +80,9 @@ app.layout = html.Div([
                 placeholder='Digite um endereço',
                 className="search-input"
             ),
-            dcc.Input(id='radius-input', type='number'),
+            # value sincroniza com o estado inicial, dps tentar mudar isso no
+            # runtime com alguma função
+            dcc.Input(id='radius-input', type='number', value=2),
             dcc.Button(id='clear'),
             # html.Div(id='search-partials', className='search-partials')
         ], className="search-container"),
@@ -135,7 +137,8 @@ def filter_butecos(butecos, search_value):
 @callback(
     Output('search-radius', 'data'),
     Input('radius-input', 'n_submit'),
-    State('radius-input', 'value')
+    State('radius-input', 'value'),
+    prevent_initial_call = True
 )
 def update_search_radius(nsubmit, new_radius):
     return new_radius
@@ -163,6 +166,21 @@ def update_address_display(center):
         return 'Nada selecionado'
 
     return center['address'] + ' ✕'
+
+
+@callback(
+    Output('center-marker', 'opacity'),
+    Output('center-marker', 'position'),
+    Input('search-state', 'data'),
+    prevent_initial_callback = True
+)
+def update_center_marker(center):
+    if center is None:
+        return 0, [0,0]
+    
+    print("Mostrando marcador de centro")
+    return 1, [center['lat'], center['lon']]
+    
 
 
 # centralização do mapa após seleção de resultado

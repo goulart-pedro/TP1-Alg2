@@ -17,6 +17,10 @@ def map(geojson_data, bounds, center, zoom=11.5):
     
     # Camadas do mapa
     camadas = [dl.TileLayer(),
+               # marcador de centro inicialmente escondido
+               # https://leafletjs.com/examples/custom-icons/
+               dl.Marker(id='center-marker', position=[0, 0], opacity=0,
+                         icon={'iconUrl': 'assets/map-center.png', 'iconAnchor': [19,19], 'iconSize': [38,38]}),
                dl.Rectangle(id='search-bounds',
                             bounds=[[0,0],
                                     [0,0]],
