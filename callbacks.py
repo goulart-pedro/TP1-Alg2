@@ -12,6 +12,75 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
             if search_lower in b['name'].lower() or search_lower in b['address'].lower()
         ]
 
+    mapa_butecos = {(b['lat'], b['lon']): b for b in butecos}
+
+    @app.callback(
+        [Output('butecos-table', 'data'),
+         Output('butecos-table', 'columns'),
+         Output('map-geojson', 'data')],
+        [Input('search-bounds', 'bounds'),
+         Input('search-state', 'data'),
+         Input('search-input', 'value')]
+    )
+    def update_map_and_table(bounds, search_state, search_value): 
+        colunas_padrao = [
+            {"name": "Nome", "id": "name"},
+            {"name": "Endereço", "id": "address"},
+        ]
+        
+        # 1. SEM BUSCA: Retorna a tabela alfabética e o mapa original
+        if not search_state or not bounds:
+            butecos_ordenados = sorted(butecos, key=lambda b: b['name'].lower())
+
+            if search_value and search_value.strip():
+                butecos_ordenados = filter_butecos(butecos_ordenados, search_value)
+
+            return butecos_ordenados, colunas_padrao, geojson_data
+        
+        # 2. COM BUSCA: A KD-Tree entra em ação!
+        lat_min, lon_min = bounds[0][0], bounds[0][1]
+        lat_max, lon_max = bounds[1][0], bounds[1][1]
+        
+        pontos_filtrados = butecos_regiao(
+            arvore_global, lat_min, lat_max, lon_min, lon_max
+        )
+        
+        # Ordena os pontos por distância
+        centro_busca = (search_state['lat'], search_state['lon'])
+        pontos_ordenados = ordena_butecos(pontos_filtrados, centro_busca)
+        
+        # Monta as informações para Tabela e Mapa no mesmo loop
+        resultado_tabela = []
+        pontos_mapa = []
+        
+        for p in pontos_ordenados:
+            chave = (p['lat'], p['lon'])
+            if chave in mapa_butecos:
+                bar = mapa_butecos[chave].copy() 
+                distancia_formatada = f"{p['distancia']:.2f} km"
+                
+                # Arruma Tabela
+                bar['distancia_str'] = distancia_formatada
+                resultado_tabela.append(bar)
+                
+                # Arruma Mapa
+                popup_html = (
+                    f"<b>{bar['name']}</b><br>"
+                    f"{bar['address']}<br>"
+                    f"<i style='color: #666; font-size: 12px;'>Distância: {distancia_formatada}</i>"
+                )
+                pontos_mapa.append({
+                    'lat': p['lat'], 
+                    'lon': p['lon'], 
+                    'popupContent': popup_html
+                })
+
+        colunas_com_distancia = colunas_padrao + [
+            {'name': 'Distância', 'id': 'distancia_str'}
+        ]
+
+        return resultado_tabela, colunas_com_distancia, dlx.dicts_to_geojson(pontos_mapa)
+
     @app.callback(
         [Output('search-state', 'data', allow_duplicate=True),
          Output('search-input', 'value', allow_duplicate=True)],
@@ -70,68 +139,7 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
     )
     def update_zoom(search_state):
         return no_update
-
-    @app.callback(
-        Output('butecos-table', 'data'),
-        [Input('search-input', 'value'),
-         Input('search-state', 'data')]
-    )
-    def update_table(search_value, search_state):
-        if not search_value or not search_value.strip():
-            if search_state:
-                centro = (search_state['lat'], search_state['lon'])
-                # Retorna uma nova lista ordenada para não quebrar a variável global
-                return sorted(butecos, key=lambda b: geodesic(centro, (b['lat'], b['lon'])).kilometers)
-            return butecos
-
-        resultado = filter_butecos(butecos, search_value)
-
-        if search_state:
-            centro = (search_state['lat'], search_state['lon'])
-            resultado.sort(key=lambda b: geodesic(centro, (b['lat'], b['lon'])).kilometers)
-
-        return resultado
-
-    @app.callback(
-        Output('map-geojson', 'data'),
-        Input('search-bounds', 'bounds'),
-        Input('search-state', 'data')
-    )
-    def update_points(bounds, search_state):
-        if bounds is None or search_state is None:
-            return geojson_data
-        
-        lat_min, lon_min = bounds[0][0], bounds[0][1]
-        lat_max, lon_max = bounds[1][0], bounds[1][1]
-        
-        pontos_filtrados = butecos_regiao(
-            arvore_global, lat_min, lat_max, lon_min, lon_max
-        )
-
-        centro_busca = (search_state['lat'], search_state['lon'])
-        pontos_ordenados = ordena_butecos(pontos_filtrados, centro_busca)
-
-        mapa_butecos = {(b['lat'], b['lon']): b for b in butecos}
-
-        pontos_dict = []
-        for p in pontos_ordenados:
-            chave = (p['lat'], p['lon'])
-            if chave in mapa_butecos:
-                bar = mapa_butecos[chave]
-                popup_html = (
-                    f"<b>{bar['name']}</b><br>"
-                    f"{bar['address']}<br>"
-                    f"<i style='color: #666; font-size: 12px;'>Distância: {p['distancia']:.2f} km</i>"
-                )
-
-                pontos_dict.append({
-                    'lat': p['lat'], 
-                    'lon': p['lon'], 
-                    'popupContent': popup_html
-                })
-        
-        return dlx.dicts_to_geojson(pontos_dict)
-
+   
     @app.callback(
         [Output('search-bounds', 'bounds'),
          Output('search-bounds', 'pathOptions')],
