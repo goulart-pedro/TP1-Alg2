@@ -13,15 +13,6 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
         ]
 
     @app.callback(
-        Output('search-radius', 'data'),
-        Input('radius-input', 'n_submit'),
-        State('radius-input', 'value'),
-        prevent_initial_call = True
-    )
-    def update_search_radius(nsubmit, new_radius):
-        return new_radius
-
-    @app.callback(
         [Output('search-state', 'data', allow_duplicate=True),
          Output('search-input', 'value', allow_duplicate=True)],
         Input('clear', 'n_clicks'),
@@ -57,12 +48,14 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
     @app.callback(
         Output('map-container', 'center'),
         Output('search-state', 'data'),
-        Input('search-input', 'n_submit'),
+        [Input('search-input', 'n_submit'),
+        Input('search-button', 'n_clicks')],
         State('search-input', 'value'),
         prevent_initial_call=True
     )
-    def update_map_center(n_submit, search_value):
-        if n_submit and search_value and search_value.strip():
+    def update_map_center(n_submit, n_clicks, search_value):
+
+        if search_value and search_value.strip():
             fetched_center = descobre_coordenadas(search_value)
             if fetched_center:
                 return fetched_center, fetched_center
@@ -133,12 +126,15 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
         [Output('search-bounds', 'bounds'),
          Output('search-bounds', 'pathOptions')],
         [Input('search-state', 'data'),
-         Input('search-radius', 'data')],
+         Input('radius-input', 'value')],
         prevent_initial_call=True
     )
     def update_rectangle(center, radius):
         if not center:
             return no_update, {'opacity': 0, 'fillOpacity': 0}
+
+        if radius is None:
+            radius = 2
         
         offset_lat = radius / 111.11
         offset_lon = radius / 111.11

@@ -89,7 +89,7 @@ body {
 .search-input {
     width: 100%;
     min-height: 50px; 
-    padding: 0 40px 0 15px;
+    padding: 0 80px 0 15px;
     border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 16px;
@@ -101,6 +101,24 @@ body {
     outline: none;
     border-color: #3498db;
     box-shadow: 0 0 5px rgba(52,152,219,0.3);
+}
+
+.search-icon-button {
+    position: absolute;
+    right: 15px; 
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #3498db;
+    transition: transform 0.2s ease;
+    padding: 0;
+}
+
+.search-icon-button:hover {
+    transform: translateY(-50%) scale(1.2); /* Dá um pulinho quando passa o mouse */
 }
 
 #clear {

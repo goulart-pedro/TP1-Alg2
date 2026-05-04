@@ -33,6 +33,7 @@ def get_layout(geojson_data, bhz, points, butecos):
                         placeholder='Digite um endereço em Belo Horizonte...', 
                         className="search-input"
                     ),
+                    html.Button('🔍', id='search-button', className="search-icon-button")
                 ], className="search-box"),
                 
                 html.Div([
