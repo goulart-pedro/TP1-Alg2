@@ -40,7 +40,8 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
     def update_address_display(center):
         if center is None:
             return 'Nada selecionado', {'display': 'none'}
-        return [html.Span(children=center['address'], className='address-text'), html.Span(children=' ✕')], {'display': 'block'}
+        
+        return [html.Span(children=center['address'], className='address-text'), html.Span(children=' ✕')], {'display': 'flex'}
 
     @app.callback(
         Output('center-marker', 'opacity'),

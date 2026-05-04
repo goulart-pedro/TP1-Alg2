@@ -71,8 +71,8 @@ body {
 .search-container {
     display: flex;
     justify-content: center;
-    align-items: stretch; /* <-- Força os dois blocos a terem a exata mesma altura */
-    height: 50px; /* <-- Altura fixa e confortável para leitura */
+    align-items: stretch;
+    flex-wrap: wrap;
     gap: 20px;
     margin: 20px auto;
     max-width: 800px;
@@ -88,8 +88,8 @@ body {
 
 .search-input {
     width: 100%;
-    height: 100%; /* <-- Preenche toda a altura de 50px */
-    padding: 0 40px 0 15px; /* Removemos o padding vertical para não espremer o texto */
+    min-height: 50px; 
+    padding: 0 40px 0 15px;
     border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 16px;
@@ -103,20 +103,30 @@ body {
     box-shadow: 0 0 5px rgba(52,152,219,0.3);
 }
 
-.clear-button {
-    position: absolute;
-    right: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: none;
-    border: none;
-    font-size: 18px;
+#clear {
+    display: none; 
+    align-items: center;
+    justify-content: space-between; 
+    gap: 8px;
+    background-color: #e0f7fa; 
+    border: 1px solid #00bcd4;
+    color: #00838f;
+    padding: 0 20px; 
+    border-radius: 25px; 
+    min-height: 40px; 
+    font-size: 14px;
     cursor: pointer;
-    color: #999;
+    width: 100%; 
+    max-width: 650px; 
+    margin-top: -15px; 
+    box-sizing: border-box;
+    transition: all 0.2s ease;
 }
 
-.clear-button:hover {
-    color: #e74c3c;
+#clear:hover {
+    background-color: #ffebee; 
+    border-color: #ef5350;
+    color: #c62828;
 }
 
 .radius-box {
@@ -131,9 +141,9 @@ body {
 }
 
 .radius-input {
-    width: 60px; /* Espaço para o número e as setinhas */
+    width: 70px; 
     height: 32px;
-    border: 1px solid #ddd; /* Borda leve para parecer uma caixa iterável */
+    border: 1px solid #ddd; 
     background: white;
     border-radius: 4px;
     font-size: 16px;
@@ -147,6 +157,12 @@ body {
     font-weight: bold;
     color: #555;
     font-size: 14px;
+}
+
+.address-text {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis; 
 }
 
 /* Mapa */
