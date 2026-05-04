@@ -111,14 +111,24 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
         centro_busca = (search_state['lat'], search_state['lon'])
         pontos_ordenados = ordena_butecos(pontos_filtrados, centro_busca)
 
-        pontos_dict = [
-            {
-                'lat': p['lat'], 
-                'lon': p['lon'], 
-                'popupContent': f"Distância: {p['distancia']:.2f} km"
-            }
-            for p in pontos_ordenados
-        ]
+        mapa_butecos = {(b['lat'], b['lon']): b for b in butecos}
+
+        pontos_dict = []
+        for p in pontos_ordenados:
+            chave = (p['lat'], p['lon'])
+            if chave in mapa_butecos:
+                bar = mapa_butecos[chave]
+                popup_html = (
+                    f"<b>{bar['name']}</b><br>"
+                    f"{bar['address']}<br>"
+                    f"<i style='color: #666; font-size: 12px;'>Distância: {p['distancia']:.2f} km</i>"
+                )
+
+                pontos_dict.append({
+                    'lat': p['lat'], 
+                    'lon': p['lon'], 
+                    'popupContent': popup_html
+                })
         
         return dlx.dicts_to_geojson(pontos_dict)
 

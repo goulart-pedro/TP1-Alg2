@@ -17,7 +17,15 @@ print('Indice Carregado')
 arvore_global = construir_KDTree([(p['lat'], p['lon']) for p in points])
 print('Índice KD-Tree construído com sucesso!')
 
-geojson_data = dlx.dicts_to_geojson(points)
+pontos_iniciais = [
+    {
+        'lat': b['lat'],
+        'lon': b['lon'],
+        'popupContent': f"<b>{b['name']}</b><br>{b['address']}"
+    }
+    for b in butecos
+]
+geojson_data = dlx.dicts_to_geojson(pontos_iniciais)
 
 # 2. Inicialização do App Dash
 app = DashProxy(__name__)
