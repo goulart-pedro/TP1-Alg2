@@ -7,7 +7,8 @@ def get_layout(geojson_data, bhz, points, butecos):
             # Componentes invisíveis para estado compartilhado
             dcc.Store(id='search-state', data=None),
             dcc.Store(id='search-radius', data=2), # Raio inicial de 2km
-            html.H1("Mapa da Breja - Belo Horizonte", className="main-title"),
+            dcc.Store(id='search-geometry', data='circle'), # circle | rect
+            html.H1("Mapa de Butecos - Belo Horizonte", className="main-title"),
             
             # Instruções
             html.Div([
@@ -49,24 +50,32 @@ def get_layout(geojson_data, bhz, points, butecos):
                     html.Span("km", className="radius-label"),
                 ], className="radius-box"),
 
+                html.Div([
+                    html.Span("Formato:", className="radius-label"),
+                    dcc.RadioItems(
+                        id='search-shape',
+                        options=[
+                            {'label': '□', 'value': 'rect'},
+                            {'label': '○', 'value': 'circle'}
+                        ],
+                        value='circle',  # padrão
+                        className="shape-selector",
+                        inline=True
+                    ),
+                ], className="radius-box"),
+               
                 dcc.Button(id='clear', children=html.Span('x')),
             
             ], className="search-container"),
+
+            # No layout, adicione um componente de seleção
+            
 
 
             # Mapa
             html.Div([
                 mapthing(geojson_data, None, bhz)
             ], className="map-container"),
-            
-            # Contadores
-            html.Div([
-                html.P([
-                    html.Strong(f"Total de coordenadas no mapa: {len(points)}"),
-                    html.Br(),
-                    html.Strong(f"Total de butecos na tabela: {len(butecos)}")
-                ], className="counters-text")
-            ], className="counters-container"),
             
             # Tabela
             html.Div([

@@ -65,6 +65,41 @@ def butecos_regiao (raiz_arvore, lat_min, lat_max, lon_min, lon_max, profundidad
 
     return lista_pontos
 
+
+def butecos_circulo(raiz_arvore, lat_centro, lon_centro, raio_km, profundidade=0):
+    lista_pontos = []
+
+    if raiz_arvore is None:
+        return lista_pontos
+
+    lat_ponto = raiz_arvore.ponto[0]
+    lon_ponto = raiz_arvore.ponto[1]
+
+    # Verifica se o ponto está dentro do círculo
+    distancia = geodesic((lat_centro, lon_centro), (lat_ponto, lon_ponto)).kilometers
+    if distancia <= raio_km:
+        lista_pontos.append(raiz_arvore.ponto)
+
+    eixo = profundidade % 2
+    raio_dg = raio_km / 111.11 # raio convertido para graus
+    
+    if eixo == 0:  # Corte na Latitude
+        # Verifica se o círculo intersecta a faixa de latitude à esquerda
+        if lat_centro - raio_dg <= lat_ponto:
+            lista_pontos.extend(butecos_circulo(raiz_arvore.esquerda, lat_centro, lon_centro, raio_km, profundidade + 1))
+        # Verifica se o círculo intersecta a faixa de latitude à direita
+        if lat_centro + raio_dg >= lat_ponto:
+            lista_pontos.extend(butecos_circulo(raiz_arvore.direita, lat_centro, lon_centro, raio_km, profundidade + 1))
+    else:  # Corte na Longitude
+        # Verifica se o círculo intersecta a faixa de longitude à esquerda
+        if lon_centro - raio_dg <= lon_ponto:
+            lista_pontos.extend(butecos_circulo(raiz_arvore.esquerda, lat_centro, lon_centro, raio_km, profundidade + 1))
+        # Verifica se o círculo intersecta a faixa de longitude à direita
+        if lon_centro + raio_dg >= lon_ponto:
+            lista_pontos.extend(butecos_circulo(raiz_arvore.direita, lat_centro, lon_centro, raio_km, profundidade + 1))
+
+    return lista_pontos
+
 # Ordena os bares pela distancia em relação ao ponto de busca.
 def ordena_butecos(lista_tuplas, centro_tupla):
     resultado = []

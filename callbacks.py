@@ -1,6 +1,6 @@
 from dash import Input, Output, State, callback, no_update, html
 import dash_leaflet.express as dlx
-from FuncoesAuxiliares import butecos_regiao, ordena_butecos, descobre_coordenadas
+from FuncoesAuxiliares import butecos_regiao, butecos_circulo, ordena_butecos, descobre_coordenadas
 from geopy.distance import geodesic
 
 def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
@@ -40,9 +40,16 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
         # 2. COM BUSCA: A KD-Tree entra em ação!
         lat_min, lon_min = bounds[0][0], bounds[0][1]
         lat_max, lon_max = bounds[1][0], bounds[1][1]
+
+
+
+        # Implementar switch de geometria de busca aqui
+        # pontos_filtrados = butecos_regiao(
+        #     arvore_global, lat_min, lat_max, lon_min, lon_max
+        # )
         
-        pontos_filtrados = butecos_regiao(
-            arvore_global, lat_min, lat_max, lon_min, lon_max
+        pontos_filtrados = butecos_circulo(
+            arvore_global, search_state['lat'], search_state['lon'], 2
         )
         
         # Ordena os pontos por distância
@@ -92,6 +99,50 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
             return None, ''
         return no_update, no_update
 
+
+    @app.callback(
+        Output('search-geometry', 'data'),
+        Input('search-shape', 'value')
+    )
+    def update_search_shape(value):
+        return value
+    
+
+    # callback unificado para alterações na área de busca
+    @app.callback(
+        [Output('search-circle', 'center'),
+         Output('search-circle', 'radius'),
+         Output('search-bounds', 'bounds'),
+         Output('search-bounds', 'pathOptions')],
+        Input('search-state', 'data'),
+        Input('search-radius', 'data'),
+        State('search-geometry', 'data')
+    )
+    def update_search_area(center, radius, geometry):
+        hidden_rect = no_update, {'opacity': 0, 'fillOpacity': 0}
+        hidden_circle = no_update, 0
+        
+        if geometry == 'circle':
+            if center:
+                return (center['lat'], center['lon']), radius * 1000, *hidden_rect
+        
+            return *hidden_circle, *hidden_rect
+
+        elif geometry == 'rect':
+            if radius is None:
+                radius = 2
+        
+            offset_lat = radius / 111.11
+            offset_lon = radius / 111.11
+            
+            bounds = [
+                [center['lat'] - offset_lat, center['lon'] - offset_lon],
+                [center['lat'] + offset_lat, center['lon'] + offset_lon]
+            ]
+
+            return *hidden_circle, bounds, {'opacity': 0.6, 'fillOpacity': 0.2}
+
+    
     @app.callback(
         Output('clear', 'children'),
         Output('clear', 'style'),
@@ -139,27 +190,4 @@ def register_callbacks(app, butecos, arvore_global, geojson_data, bhz):
     )
     def update_zoom(search_state):
         return no_update
-   
-    @app.callback(
-        [Output('search-bounds', 'bounds'),
-         Output('search-bounds', 'pathOptions')],
-        [Input('search-state', 'data'),
-         Input('radius-input', 'value')],
-        prevent_initial_call=True
-    )
-    def update_rectangle(center, radius):
-        if not center:
-            return no_update, {'opacity': 0, 'fillOpacity': 0}
-
-        if radius is None:
-            radius = 2
         
-        offset_lat = radius / 111.11
-        offset_lon = radius / 111.11
-        
-        bounds = [
-            [center['lat'] - offset_lat, center['lon'] - offset_lon],
-            [center['lat'] + offset_lat, center['lon'] + offset_lon]
-        ]
-        return bounds, {'opacity': 0.6, 'fillOpacity': 0.2}
-    

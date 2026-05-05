@@ -26,7 +26,9 @@ def map(geojson_data, bounds, center, zoom=11.5):
                                     [0,0]],
                             color="#0000ff",
                             weight=2,
-                            fillOpacity=0.1)]
+                            fillOpacity=0.1),
+               dl.Circle(id='search-circle', center=center, radius=0, color="#ff0000"),
+               ]
 
                 
     # Adicionar GeoJSON
@@ -41,5 +43,5 @@ def map(geojson_data, bounds, center, zoom=11.5):
     
     return html.Div([
         dl.Map(camadas, id="map-container", center=center, 
-               zoom=zoom, style={'height': '500px', 'width': '100%'})
+               zoom=zoom, style={'height': '100%', 'width': '100%'})
     ], className="map-container")
