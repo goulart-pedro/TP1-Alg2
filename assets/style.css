@@ -202,8 +202,7 @@ body {
 .shape-selector label:has(input:checked) {
     opacity: 1;  /* Totalmente visível quando selecionado */
     color: rebeccapurple;
-    border: 1px solid rebeccapurple;
-
+    border: none;
 }
 
 /* Mapa */
