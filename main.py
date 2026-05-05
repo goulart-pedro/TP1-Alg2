@@ -38,4 +38,4 @@ register_callbacks(app, butecos, arvore_global, geojson_data, bhz)
 
 # 5. Execução do Servidor
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
